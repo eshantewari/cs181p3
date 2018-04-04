@@ -24,13 +24,12 @@ print("Done!")
 
 
 print("Reading in data...")
-data = pd.read_csv("train_500.csv", header = None) #CHANGE THIS!!!
+N = 10 #Number of samples we are using: CHANGE THIS!!!
+data = pd.read_csv("train_500.csv", header = None, nrows = N) #CHANGE THE FILE NAME!!!
 print("Done!")
 
 
 print("Creating .wav files...")
-
-N = 10 #Number of samples we are using: CHANGE THIS!!!
 print("N:",N)
 train = data.iloc[0:N,1:].values
 print("Train shape",train.shape)
