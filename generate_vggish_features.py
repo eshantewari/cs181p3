@@ -24,7 +24,7 @@ print("Done!")
 
 
 print("Reading in data...")
-data = pd.read_csv("train_10.csv")
+data = pd.read_csv("train_500.csv", header = None)
 print("Done!")
 
 
