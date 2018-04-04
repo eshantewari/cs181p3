@@ -30,21 +30,21 @@ print("Done!")
 
 print("Creating .wav files...")
 
-N = 10 #Number of samples we are using: CHANGE THIS!!!
-print("N:",N)
-train = data.iloc[0:N,1:].values
+# N = 10 #Number of samples we are using
+# print("N:",N)
+X_test = data.iloc[:,1:].values
 print("Train shape",train.shape)
-N_train = train.shape[0] #Same as N
-NUM_SAMPLES = train.shape[1]-1 #Number of columns, sans the class label
+N_train = X_test.shape[0] #Same as N
+NUM_SAMPLES = X_test.shape[1]-1 #Number of columns, sans the class label
 
-X_train = train[:,:-1]
-y_train = train[:,-1]
-y_train = y_train.reshape(N_train,1)
+# X_train = train[:,:-1]
+# y_train = train[:,-1]
+# y_train = y_train.reshape(N_train,1)
 
 SAMPLE_RATE = 22050
 
-for i in range(0, X_train.shape[0]):
-    write("WaveFiles/xtrain_"+str(i)+".wav", SAMPLE_RATE, (32768*X_train[i]).astype(np.int16))
+for i in range(0, X_test.shape[0]):
+    write("WaveFiles/xtrain_"+str(i)+".wav", SAMPLE_RATE, (32768*X_test[i]).astype(np.int16))
 
 print("Done!")
 
@@ -104,13 +104,10 @@ for i in range(0, N):
     output_sequences_sorted.append(output_sequences[arg])
 
 output_sequences_sorted = np.array(output_sequences_sorted)
-np.save('Data/xtrain_vggish', output_sequences_sorted)
-np.save('Data/ytrain_spec', output_sequences_sorted)
+np.save('Data/xtest_vggish', output_sequences_sorted)
+#np.save('Data/ytrain_spec', output_sequences_sorted)
 print("Output Shape: ",output_sequences_sorted.shape)
 print("Done!")
 print("---------")
 print("All finished, we cookin'")
-
-
-
 
