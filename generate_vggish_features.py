@@ -24,11 +24,11 @@ print("Done!")
 
 
 print("Reading in data...")
-N = 10 #Number of samples we are using: CHANGE THIS!!!
-data = pd.read_csv("train_500.csv", header = None, nrows = N) #CHANGE THE FILE NAME!!!
+N = 6325 #Number of samples we are using: CHANGE THIS!!!
+#data = pd.read_csv("train_500.csv", header = None, nrows = N) #CHANGE THE FILE NAME!!!
 print("Done!")
 
-
+'''
 print("Creating .wav files...")
 print("N:",N)
 train = data.iloc[0:N,1:].values
@@ -40,12 +40,14 @@ X_train = train[:,:-1]
 y_train = train[:,-1]
 y_train = y_train.reshape(N_train,1)
 
+
 SAMPLE_RATE = 22050
 
 for i in range(0, X_train.shape[0]):
     write("WaveFiles/xtrain_"+str(i)+".wav", SAMPLE_RATE, (32768*X_train[i]).astype(np.int16))
 
 print("Done!")
+'''
 
 
 print("Processing .wav files...")
@@ -55,11 +57,14 @@ wav_files = listdir(wav_file_direc)
 
 #Initialize array of batches and read each wav_file in wav_files array
 batches = []
-
+count = 0
 for wav_file in wav_files:
     if "wav" in wav_file:
         examples_batch = vggish_input.wavfile_to_examples(join(wav_file_direc,wav_file))
         batches.append(examples_batch)
+        count += 1
+        if count % 100 == 0:
+            print("At File ",count,"/",N)
 
 print("Done!")
 
@@ -69,6 +74,7 @@ print("Computing Tensorflow Embeddings...")
 pproc = vggish_postprocess.Postprocessor(pca_params)
 
 output_sequences = []
+
 with tf.Graph().as_default(), tf.Session() as sess:
     # Define the model in inference mode, load the checkpoint, and
     # locate input and output tensors.
@@ -78,13 +84,17 @@ with tf.Graph().as_default(), tf.Session() as sess:
         vggish_params.INPUT_TENSOR_NAME)
     embedding_tensor = sess.graph.get_tensor_by_name(
         vggish_params.OUTPUT_TENSOR_NAME)
-
+    
+    count = 0
     for batch in batches:
         # Run inference and postprocessing.
         [embedding_batch] = sess.run([embedding_tensor],
                                    feed_dict={features_tensor: batch})
         postprocessed_batch = pproc.postprocess(embedding_batch)
         output_sequences.append(postprocessed_batch)
+        count += 1
+        if count % 100 == 0:
+            print("At Embedding ",count,"/",N)
 
 output_sequences = np.array(output_sequences)
 print("Done!")
@@ -104,7 +114,7 @@ for i in range(0, N):
 
 output_sequences_sorted = np.array(output_sequences_sorted)
 np.save('Data/xtrain_vggish', output_sequences_sorted)
-np.save('Data/ytrain_spec', output_sequences_sorted)
+#np.save('Data/ytrain_spec', y_train)
 print("Output Shape: ",output_sequences_sorted.shape)
 print("Done!")
 print("---------")

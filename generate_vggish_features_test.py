@@ -21,26 +21,23 @@ pca_params = "vggish/vggish_pca_params.npz"
 checkpoint = "vggish/vggish_model.ckpt"
 
 print("Done!")
+N = 1000
 
-
+'''
 print("Reading in data...")
-data = pd.read_csv("train_500.csv", header = None) #CHANGE THIS!!!
+data = pd.read_csv("test.csv.gz", header = None)
 print("Done!")
 
 
 print("Creating .wav files...")
 
-# N = 10 #Number of samples we are using
-# print("N:",N)
-X_test = data.iloc[:,1:].values
-indicies = data.iloc[:,1].values
+N = 1000 #Number of samples we are using
+print("N:",N)
+X_test = data.iloc[:,2:].values #For consistency with the one-off error in the training
+indicies = data.iloc[:,0].values
 print("Test shape",X_test.shape)
 N_test = X_test.shape[0] #Same as N
 NUM_SAMPLES = X_test.shape[1] #Number of columns
-
-# X_train = train[:,:-1]
-# y_train = train[:,-1]
-# y_train = y_train.reshape(N_train,1)
 
 SAMPLE_RATE = 22050
 
@@ -48,7 +45,15 @@ for i in range(0, X_test.shape[0]):
     write("WaveFilesTest/xtest_"+str(i)+".wav", SAMPLE_RATE, (32768*X_test[i]).astype(np.int16))
 
 print("Done!")
+'''
 
+print("Reading in data...")
+N = 1000
+data = pd.read_csv("test.csv.gz", header = None, usecols = [0], nrows = N) 
+print("Done!")
+indicies = data.iloc[:,0].values
+
+np.save('Data/test_indicies', indicies)
 
 print("Processing .wav files...")
 
@@ -81,12 +86,16 @@ with tf.Graph().as_default(), tf.Session() as sess:
     embedding_tensor = sess.graph.get_tensor_by_name(
         vggish_params.OUTPUT_TENSOR_NAME)
 
+    count = 0
     for batch in batches:
         # Run inference and postprocessing.
         [embedding_batch] = sess.run([embedding_tensor],
                                    feed_dict={features_tensor: batch})
         postprocessed_batch = pproc.postprocess(embedding_batch)
         output_sequences.append(postprocessed_batch)
+        count += 1
+        if count % 100 == 0:
+            print("At Embedding ",count,"/",N)
 
 output_sequences = np.array(output_sequences)
 print("Done!")
@@ -97,17 +106,16 @@ print("Processing and saving as a pickle file...")
 order = []
 for wavfile in wav_files:
 	if "wav" in wavfile:
-		order.append(int(wavfile[7:-4]))
+		order.append(int(wavfile[6:-4]))
 
 output_sequences_sorted = []
-for i in range(0, N):
+for i in indicies.tolist():
     arg = order.index(i)
     output_sequences_sorted.append(output_sequences[arg])
 
 output_sequences_sorted = np.array(output_sequences_sorted)
 np.save('Data/xtest_vggish', output_sequences_sorted)
-np.save('Data/xtest_indicies', indicies)
-#np.save('Data/ytrain_spec', output_sequences_sorted)
+
 print("Output Shape: ",output_sequences_sorted.shape)
 print("Done!")
 print("---------")
